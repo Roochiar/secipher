@@ -1,0 +1,19 @@
+{
+  "name": "secipher",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "test": "nodemon main",
+    "build": "tsc & npm start"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.6",
+    "nodemon": "^3.0.3",
+    "typescript": "^5.3.3"
+  }
+}
