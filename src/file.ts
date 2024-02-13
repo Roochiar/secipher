@@ -154,6 +154,8 @@ class File {
 
                 prevData[name] = value
             }
+
+            
         } catch (err) {
             return err
         }
