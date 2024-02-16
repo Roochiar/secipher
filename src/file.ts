@@ -1,25 +1,26 @@
 import fs from "fs"
 import os from 'os'
 import { createKey } from "./createKey.js"
-import type { AllFile, KeyFile } from './types.js'
+import type { AllFile, KeyFile, createFileReturn } from './types.js'
 
 class File {
-    private file: {
-        name: string,
-        password: string,
-        dir: fs.PathOrFileDescriptor
-    } = {
-            name: "",
-            password: "",
-            dir: ""
-        }
+    private file: createFileReturn = {
+        name: "",
+        password: "",
+        dir: ""
+    }
 
-    private fakeFiles: string[] = []
+    private fakeFiles: createFileReturn[] = []
 
     public async request(url: fs.PathOrFileDescriptor, options?: { name?: string, password?: string }) {
         if (this.file.name && this.file.dir) {
-
-            await this.rename(url)
+            return await this.rename(this.file.dir, this.file.name)
+                .then(res => {
+                    return { status: true, res }
+                })
+                .catch(err => {
+                    return { status: false, res: err }
+                })
         } else {
             if (options?.name) {
                 const prev = this.file
@@ -28,7 +29,7 @@ class File {
                     ...options,
                     dir: url
                 }
-                await this.read()
+                return await this.read()
                     .then(res => {
                         return { status: true, res }
                     })
@@ -37,7 +38,7 @@ class File {
                         return { status: false, err }
                     })
             } else {
-                await this.create(url)
+                return await this.create(url)
                     .then(res => {
                         return { status: true, res }
                     })
@@ -48,56 +49,114 @@ class File {
         }
     }
 
-    public setData() {
+    public async setData(type: "new" | "edit", name: string, data: KeyFile) {
+        try {
+            if (type === "new") {
+                await this.checkData(name)
+                    .then(() => new Error(`${name} it exists`))
 
+                if (await this.newData(name, data)) {
+                    return { status: true }
+                } else {
+                    new Error("can not set new Data")
+                }
+            } else {
+                await this.checkData(name)
+                    .catch(() => new Error("not found"))
+
+                const editedData = await this.read()
+                    .then(res => {
+                        const json = JSON.parse(`${res}`)
+                        return { ...json[name], ...data }
+                    })
+                    .catch(() => new Error("can not edit Data"))
+
+                if (await this.newData(name, editedData)) {
+                    return { status: true }
+                } else {
+                    new Error("can not edit Data")
+                }
+
+            }
+        } catch (err) {
+            return { status: false, res: err }
+        }
     }
 
-    public getData() {
+    public async getData(name: string) {
+        try {
+            await this.checkData(name)
+                .catch(() => new Error("not found"))
 
+            const data = await this.read()
+                .then(res => {
+                    const json = JSON.parse(`${res}`)
+                    return json[name]
+                })
+                .catch(() => new Error("can not read file"))
+
+            if (await data) return { status: true, res: data }
+            else new Error("can not get data")
+        } catch (err) {
+            return { staus: false, res: err }
+        }
     }
 
     private async read() {
         try {
-            fs.readFile(`${this.file.dir + this.file.name}.json`, { encoding: "utf-8" }, (err, data) => {
+            fs.readFile(`${this.file.dir + this.file.name}.json`, (err, data) => {
                 if (err) throw Error(err.message)
 
-                return data
+                return data.toString()
             })
         } catch (err) {
             return err
         }
     }
 
-    private async create(dir: fs.PathOrFileDescriptor) {
+    private async create(dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake" }) {
         const name = createKey(1, "code2").str
         const password = createKey(1, "code2").str
 
         try {
-            fs.writeFile(`${dir + name}.json`, "{}", err => {
-                if (err) throw Error(err.message)
+            fs.writeFile(`${dir + name}.json`, data ? JSON.stringify(data) : "{}", err => {
+                if (err) throw new Error(err.message)
 
-                this.file = {
-                    name: name,
-                    password: password,
-                    dir: dir
+                if (!options || !options.type || options.type === "basic") {
+                    this.file = {
+                        name: name,
+                        password: password,
+                        dir: dir
+                    }
+                    return this.file
+                } else if (options.type === "fake") {
+                    this.fakeFiles.push({
+                        name: name,
+                        password: password,
+                        dir: dir
+                    })
+                    return {
+                        name: name,
+                        password: password,
+                        dir: dir
+                    }
+                } else {
+                    return {
+                        name: name,
+                        password: password,
+                        dir: dir
+                    }
                 }
-                return this.file
             })
         } catch (err) {
             return err
         }
     }
 
-    private async remove() {
+    private async remove(dir: fs.PathOrFileDescriptor, name: string) {
         try {
-            fs.rm(`${this.file.dir + this.file.name}.json`, err => {
-                if (err) throw Error(err.message)
-
-                this.file = {
-                    name: "",
-                    password: "",
-                    dir: ""
-                }
+            fs.rm(`${dir + name}.json`, err => {
+                if (err) throw new Error(err.message)
                 return true
             })
         } catch (err) {
@@ -105,12 +164,12 @@ class File {
         }
     }
 
-    private async rename(dir: fs.PathOrFileDescriptor) {
+    private async rename(dir: fs.PathOrFileDescriptor, fileName: string) {
         const name = createKey(1, "code2").str
         const password = createKey(1, "code2").str
 
         try {
-            fs.rename(this.file.name, `${dir + name}.json`, err => {
+            fs.rename(`${dir + fileName}.json`, `${dir + name}.json`, err => {
                 if (err) throw Error(err.message)
 
                 this.file = {
@@ -141,21 +200,24 @@ class File {
 
     private async newData(name: string, value: KeyFile) {
         try {
-            await this.checkData(name)
-                .then(() => new Error("This name exists"))
+            const prevFile = this.file
+
+            const data = await this.read()
+                .then(res => {
+                    let json = JSON.parse(`${res}`)
+
+                    json[name] = value
+
+                    return json
+                })
+                .catch(err => new Error("can not read file", err))
 
 
-            await this.read()
-                .then(data => add(data))
-                .catch(err => new Error(err))
+            const create = await this.create(this.file.dir, data)
 
-            const add = (obj: unknown) => {
-                let prevData: AllFile = JSON.parse(`${obj}`)
-
-                prevData[name] = value
-            }
-
-            
+            if (create === this.file) {
+                return await this.remove(prevFile.dir, prevFile.name)
+            } else throw new Error("can not add new Data")
         } catch (err) {
             return err
         }
@@ -163,5 +225,7 @@ class File {
 }
 
 export default async function getFile(url: fs.PathOrFileDescriptor, options?: { name?: string, password?: string }) {
-    return await new File().request(url)
+    const file = new File()
+
+    return { request: file.request, setData: file.setData, getData: file.getData }
 }
