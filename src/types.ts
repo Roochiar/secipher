@@ -10,6 +10,7 @@ export type AllFile = {
 
 export type createFileReturn = {
     name: string,
+    suffix: string,
     password: string,
     dir: fs.PathOrFileDescriptor
 }
