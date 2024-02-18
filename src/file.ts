@@ -52,7 +52,7 @@ export default class File {
                 await this.checkData(name)
                     .then(() => new Error(`${name} it exists`))
 
-                if (await this.newData(name, data)) {
+                if (await this.newData(name, data).then(() => true).catch(() => false)) {
                     return { status: true }
                 } else {
                     new Error("can not set new Data")
@@ -101,19 +101,21 @@ export default class File {
 
     private async read() {
         try {
-            return (await fs.promises.readFile(`${this.file.dir + this.file.name}.${this.file.suffix}`)).toString()
+            const data = await fs.promises.readFile(`${this.file.dir + this.file.name}.${this.file.suffix}`)
+            console.log(data);
+            return data.toString()
         } catch (err) {
             return err
         }
     }
 
-    private async create(dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake" }) {
-        const name = createKey(1, "code2").str
-        const suffix = createKey(1, "code2").str
-        const password = createKey(1, "code2").str
+    private async create(dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake", change?: "create" | "edit" }) {
+        const name = options?.change === "edit" ? this.file.name : createKey(1, "code2").str
+        const suffix = options?.change === "edit" ? this.file.suffix : createKey(1, "code2").str
+        const password = options?.change === "edit" ? this.file.password : createKey(1, "code2").str
 
         try {
-            await fs.promises.writeFile(`${dir + name}.${suffix}`, data ? JSON.stringify(data) : "{}");
+            await fs.promises.writeFile(`${dir + name}.${suffix}`, data ? JSON.stringify(data) : options?.change === "create" ? "{}" : "");
 
             if (!options || !options.type || options.type === "basic") {
                 this.file = { name, suffix, password, dir };
@@ -170,25 +172,30 @@ export default class File {
     private async newData(name: string, value: KeyFile) {
         try {
             const prevFile = this.file
+            console.log(true);
+            
 
             const data = await this.read()
                 .then(res => {
+                    console.log(res);
+                    
                     let json = JSON.parse(`${res}`)
 
                     json[name] = value
-
+                    
                     return json
                 })
-                .catch(err => new Error("can not read file", err))
+                .catch(() => undefined)
 
+            await data === undefined ? new Error("can not read file") : undefined
 
-            const create = await this.create(this.file.dir, data)
+            const create = await this.create(this.file.dir, data, { change: "edit" })
 
             if (create === this.file) {
                 return await this.remove(prevFile.dir, prevFile.name, prevFile.suffix)
             } else new Error("can not add new Data")
-        } catch (err) {
-            return err
+        } catch {
+            return false
         }
     }
 }
