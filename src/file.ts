@@ -22,7 +22,7 @@ export default class File {
             }
             return await this.read()
                 .then(async () => {
-                    return await this.rename(url, options.name!)
+                    return await this.rename(url, options.name, options.suffix)
                         .then(res => {
                             return { status: true, res }
                         })
@@ -101,12 +101,7 @@ export default class File {
 
     private async read() {
         try {
-            fs.readFile(`${this.file.dir + this.file.name}.${this.file.suffix}`, (err, data) => {
-                console.log(err, data);
-
-                if (err) new Error(err.message)
-                else return data.toString()
-            })
+            return (await fs.promises.readFile(`${this.file.dir + this.file.name}.${this.file.suffix}`)).toString()
         } catch (err) {
             return err
         }
@@ -135,29 +130,24 @@ export default class File {
 
     }
 
-    private async remove(dir: fs.PathOrFileDescriptor, name: string) {
+    private async remove(dir: fs.PathOrFileDescriptor, name: string, suffix: string) {
         try {
-            fs.rm(`${dir + name}.json`, err => {
-                if (err) new Error(err.message)
-                return true
-            })
+            await fs.promises.rm(`${dir + name}.${suffix}`)
+            return true
         } catch (err) {
             return err
         }
     }
 
-    private async rename(dir: fs.PathOrFileDescriptor, fileName: string) {
+    private async rename(dir: fs.PathOrFileDescriptor, fileName: string, fileSuffix: string) {
         const name = createKey(1, "code2").str
         const suffix = createKey(1, "code2").str
         const password = createKey(1, "code2").str
 
         try {
-            fs.rename(`${dir + fileName}.${suffix}`, `${dir + name}.json`, err => {
-                if (err) Error(err.message)
-
-                this.file = { name, suffix, password, dir }
-                return this.file
-            })
+            await fs.promises.rename(`${dir + fileName}.${fileSuffix}`, `${dir + name}.${suffix}`)
+            this.file = { name, suffix, password, dir }
+            return this.file
         } catch (err) {
             return err
         }
@@ -195,7 +185,7 @@ export default class File {
             const create = await this.create(this.file.dir, data)
 
             if (create === this.file) {
-                return await this.remove(prevFile.dir, prevFile.name)
+                return await this.remove(prevFile.dir, prevFile.name, prevFile.suffix)
             } else new Error("can not add new Data")
         } catch (err) {
             return err
