@@ -38,6 +38,8 @@ export default class File {
         } else {
             return await this.create(url)
                 .then(res => {
+                    console.log(this.file);
+                    
                     return { status: true, res }
                 })
                 .catch(err => {
@@ -52,10 +54,10 @@ export default class File {
                 await this.checkData(name)
                     .then(() => new Error(`${name} it exists`))
 
-                if (await this.newData(name, data).then(() => true).catch(() => false)) {
+                if (await this.newData(name, data)) {
                     return { status: true }
                 } else {
-                    new Error("can not set new Data")
+                    throw new Error("can not set new Data")
                 }
             } else {
                 await this.checkData(name)
@@ -71,7 +73,7 @@ export default class File {
                 if (await this.newData(name, editedData)) {
                     return { status: true }
                 } else {
-                    new Error("can not edit Data")
+                    throw new Error("can not edit Data")
                 }
 
             }
@@ -101,10 +103,13 @@ export default class File {
 
     private async read() {
         try {
+            console.log(this.file);
             const data = await fs.promises.readFile(`${this.file.dir + this.file.name}.${this.file.suffix}`)
-            console.log(data);
+            
             return data.toString()
         } catch (err) {
+            console.log(false);
+            
             return err
         }
     }
@@ -172,17 +177,15 @@ export default class File {
     private async newData(name: string, value: KeyFile) {
         try {
             const prevFile = this.file
-            console.log(true);
-            
 
             const data = await this.read()
                 .then(res => {
                     console.log(res);
-                    
+
                     let json = JSON.parse(`${res}`)
 
                     json[name] = value
-                    
+
                     return json
                 })
                 .catch(() => undefined)
@@ -193,7 +196,7 @@ export default class File {
 
             if (create === this.file) {
                 return await this.remove(prevFile.dir, prevFile.name, prevFile.suffix)
-            } else new Error("can not add new Data")
+            } else throw new Error("can not add new Data")
         } catch {
             return false
         }

@@ -12,9 +12,8 @@ for (const item of a) {
 
 const json = await new file().request("./");
 
-setTimeout(async () => {
-    console.log(json.status ? await new file().setData("new", "hfghdfhfgh", data) : false, 7);
-    
-}, 5000)
+// if (await json.status) {
+//     new File
+// }
 
 console.log("end");
