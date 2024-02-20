@@ -1,4 +1,4 @@
-import file from './file.js'
+import {request, setData, getData} from './file.js'
 import { create } from "./create.js"
 import { KeyFile } from './types.js';
 import { createKey } from './createKey.js';
@@ -10,10 +10,13 @@ for (const item of a) {
     data[item] = createKey(1).str
 }
 
-const json = await new file().request("./");
+const json = await request("./");
 
-// if (await json.status) {
-//     new File
-// }
+console.log(json);
+
+
+if (json.status) {
+    console.log(await json.setData("new", "jhsdofgdfoihdfg", data))
+}
 
 console.log("end");
