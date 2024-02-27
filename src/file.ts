@@ -114,16 +114,24 @@ const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { 
     const password = options?.change === "edit" ? file.password : createKey(1, "code2").str
 
     try {
-        fs.writeFile(`${dir + name}.${suffix}`, data ? JSON.stringify(data) : options?.change === "create" ? "{}" : "", err => { if (err) throw new Error("can not write file") })
-        if (!options || !options.type || options.type === "basic") {
-            file = { name, suffix, password, dir };
-            return file;
-        } else if (options.type === "fake") {
-            fakeFiles.push({ name, suffix, password, dir });
-            return { name, suffix, password, dir };
-        } else {
-            return { name, suffix, password, dir };
-        }
+        return await fs.promises.writeFile(`${dir + name}.${suffix}`, data ? JSON.stringify(data) : options?.change === "create" ? "{}" : "")
+            .then(() => {
+                console.log(true, 119);
+                
+                if (!options || !options.type || options.type === "basic") {
+                    file = { name, suffix, password, dir };
+                    return file;
+                } else if (options.type === "fake") {
+                    fakeFiles.push({ name, suffix, password, dir });
+                    return { name, suffix, password, dir };
+                } else {
+                    return { name, suffix, password, dir };
+                }
+            })
+            .catch(err => {
+                console.log(false, 132);
+                throw new Error(err)
+            })
     } catch (err) {
         return err;
     }
