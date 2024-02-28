@@ -23,7 +23,7 @@ const request = async (url: fs.PathOrFileDescriptor, options?: { name: string, s
             .then(async () => {
                 return await rename(url, options.name, options.suffix)
                     .then(res => {
-                        return { status: true, res, getData, setData }
+                        return { status: true, res }
                     })
                     .catch(err => {
                         file = prev
@@ -37,7 +37,7 @@ const request = async (url: fs.PathOrFileDescriptor, options?: { name: string, s
     } else {
         return await create(url, undefined, { change: "create" })
             .then(res => {
-                return { status: true, res, getData, setData }
+                return { status: true, res }
             })
             .catch(err => {
                 return { status: false, err }
@@ -47,11 +47,15 @@ const request = async (url: fs.PathOrFileDescriptor, options?: { name: string, s
 
 const setData = async (type: "new" | "edit", name: string, data: KeyFile) => {
     try {
+
         if (type === "new") {
             await checkData(name)
                 .then(() => new Error(`${name} it exists`))
-
-            if (await newData(name, data)) {
+                
+                if (await newData(name, data)) {
+                await read()
+                    .then(data => console.log(data, 51))
+                    .catch(() => console.log(false, 52))
                 return { status: true }
             } else {
                 throw new Error("can not set new Data")
@@ -117,7 +121,7 @@ const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { 
         return await fs.promises.writeFile(`${dir + name}.${suffix}`, data ? JSON.stringify(data) : options?.change === "create" ? "{}" : "")
             .then(() => {
                 console.log(true, 119);
-                
+
                 if (!options || !options.type || options.type === "basic") {
                     file = { name, suffix, password, dir };
                     return file;
@@ -177,8 +181,6 @@ const checkData = async (name: string) => {
 
 const newData = async (name: string, value: KeyFile) => {
     try {
-        const prevFile = file
-
         const data = await read()
             .then(res => {
 
@@ -196,12 +198,11 @@ const newData = async (name: string, value: KeyFile) => {
 
         const res = await create(file.dir, data, { change: "edit" })
 
-        if (res === file) {
-            return await remove(prevFile.dir, prevFile.name, prevFile.suffix)
-        } else throw new Error("can not add new Data")
+        if (res === file) return true
+        else throw new Error("can not add new Data")
     } catch {
         return false
     }
 }
 
-export { request }
+export { request, getData, setData }
