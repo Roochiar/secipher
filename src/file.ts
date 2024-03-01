@@ -1,68 +1,52 @@
 import fs from "fs"
 import { createKey } from "./createKey.js"
 import type { AllFile, KeyFile, createFileReturn } from './types.js'
+import { encrypt, decrypt } from "./encrypt.js"
 
 let file: createFileReturn = {
     name: "",
     suffix: "",
     password: "",
-    dir: ""
+    dir: "",
+    obj: {}
 }
 
 let fakeFiles: createFileReturn[] = []
 
-const request = async (url: fs.PathOrFileDescriptor, options?: { name: string, suffix: string, password: string }) => {
-    if (options?.name) {
-        const prev = file
-        file = {
-            ...file,
-            ...options,
-            dir: url
+const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }: { name?: string, suffix?: string, password?: string }) => {
+    const prev = file
+    try {
+
+        if (name && suffix && password) {
+            file = { ...file, name, suffix, password, dir: url }
+            await read()
+            const res = await rename(url, name, suffix)
+            return { status: true, res }
+        } else {
+            file = { ...file, dir: url }
+            const res = await create(url, undefined, { change: "create" })
+            return { status: true, res }
         }
-        return await read()
-            .then(async () => {
-                return await rename(url, options.name, options.suffix)
-                    .then(res => {
-                        return { status: true, res }
-                    })
-                    .catch(err => {
-                        file = prev
-                        return { status: false, res: err }
-                    })
-            })
-            .catch(err => {
-                file = prev
-                return { status: false, err }
-            })
-    } else {
-        return await create(url, undefined, { change: "create" })
-            .then(res => {
-                return { status: true, res }
-            })
-            .catch(err => {
-                return { status: false, err }
-            })
+    } catch (err) {
+        file = prev
+        return { status: false, err }
     }
 }
 
+
 const setData = async (type: "new" | "edit", name: string, data: KeyFile) => {
     try {
-
         if (type === "new") {
-            await checkData(name)
-                .then(() => new Error(`${name} it exists`))
-                
-                if (await newData(name, data)) {
-                await read()
-                    .then(data => console.log(data, 51))
-                    .catch(() => console.log(false, 52))
-                return { status: true }
-            } else {
-                throw new Error("can not set new Data")
-            }
+            return await checkData(name)
+                .then(() => { throw new Error(`${name} it exists`) })
+                .catch(async () => {
+                    if (await newData(name, data)) return { status: true }
+
+                    throw new Error("can not set new Data")
+                })
         } else {
             await checkData(name)
-                .catch(() => new Error("not found"))
+                .catch(() => { throw new Error("not found") })
 
             const editedData = await read()
                 .then(res => {
@@ -85,62 +69,61 @@ const setData = async (type: "new" | "edit", name: string, data: KeyFile) => {
 
 const getData = async (name: string) => {
     try {
-        await checkData(name)
-            .catch(() => new Error("not found"))
+        const res = await read().catch(() => { throw new Error("can not read file") })
+        const json = await JSON.parse(`${res}`)
+        const data = await json[name]
 
-        const data = await read()
-            .then(res => {
-                const json = JSON.parse(`${res}`)
-                return json[name]
-            })
-            .catch(() => new Error("can not read file"))
-
-        if (await data) return { status: true, res: data }
-        else new Error("can not get data")
+        if (data) {
+            return { status: true, res: data }
+        } else {
+            throw new Error("can not get data")
+        }
     } catch (err) {
-        return { staus: false, res: err }
+        return { status: false, res: err }
     }
 }
+
 
 const read = async () => {
     try {
         const data = await fs.promises.readFile(`${file.dir + file.name}.${file.suffix}`)
-
-        return data.toString()
+        return decrypt(data.toString(), file.obj)
     } catch (err) {
         return err
     }
 }
 
 const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake", change?: "create" | "edit" }) => {
-    const name = options?.change === "edit" ? file.name : createKey(1, "code2").str
-    const suffix = options?.change === "edit" ? file.suffix : createKey(1, "code2").str
-    const password = options?.change === "edit" ? file.password : createKey(1, "code2").str
+    let name, suffix, password;
+    if (options?.change === "edit") {
+        name = file.name;
+        suffix = file.suffix;
+        password = file.password;
+    } else {
+        name = createKey(1, "code2").str;
+        suffix = createKey(1, "code2").str;
+        password = createKey(1, "code2").str;
+    }
 
     try {
-        return await fs.promises.writeFile(`${dir + name}.${suffix}`, data ? JSON.stringify(data) : options?.change === "create" ? "{}" : "")
-            .then(() => {
-                console.log(true, 119);
+        const newData = data ? JSON.stringify(data) : (options?.change === "create" ? "{}" : "");
+        const dataEncrypted = encrypt(newData, 2, "code1");
+        await fs.promises.writeFile(`${dir + name}.${suffix}`, dataEncrypted.output);
 
-                if (!options || !options.type || options.type === "basic") {
-                    file = { name, suffix, password, dir };
-                    return file;
-                } else if (options.type === "fake") {
-                    fakeFiles.push({ name, suffix, password, dir });
-                    return { name, suffix, password, dir };
-                } else {
-                    return { name, suffix, password, dir };
-                }
-            })
-            .catch(err => {
-                console.log(false, 132);
-                throw new Error(err)
-            })
+        if (!options || !options.type || options.type === "basic") {
+            file = { name, suffix, password, dir, obj: dataEncrypted.obj };
+            return file;
+        } else if (options.type === "fake") {
+            fakeFiles.push({ name, suffix, password, dir, obj: dataEncrypted.obj });
+            return { name, suffix, password, dir, obj: dataEncrypted.obj };
+        } else {
+            return { name, suffix, password, dir };
+        }
     } catch (err) {
         return err;
     }
-
 }
+
 
 const remove = async (dir: fs.PathOrFileDescriptor, name: string, suffix: string) => {
     try {
@@ -158,7 +141,7 @@ const rename = async (dir: fs.PathOrFileDescriptor, fileName: string, fileSuffix
 
     try {
         await fs.promises.rename(`${dir + fileName}.${fileSuffix}`, `${dir + name}.${suffix}`)
-        file = { name, suffix, password, dir }
+        file = { ...file, name, suffix, password, dir }
         return file
     } catch (err) {
         return err
@@ -170,8 +153,11 @@ const checkData = async (name: string) => {
         let check = false
 
         await read()
-            .then(data => JSON.parse(`${data}`)[name] ? check = true : new Error(`${name} is not found!`))
-            .catch(err => new Error(err))
+            .then(data => {
+                if (JSON.parse(`${data}`)[name]) check = true
+                else throw new Error(`${name} is not found!`)
+            })
+            .catch(err => { throw new Error(err) })
 
         return check
     } catch (err) {
@@ -183,18 +169,11 @@ const newData = async (name: string, value: KeyFile) => {
     try {
         const data = await read()
             .then(res => {
-
                 let json = JSON.parse(`${res}`)
-
-
                 json[name] = value
-
                 return json
             })
-            .catch(() => undefined)
-
-
-        if (await data === undefined) throw new Error("can not read file")
+            .catch(() => { throw new Error("can not read data") })
 
         const res = await create(file.dir, data, { change: "edit" })
 

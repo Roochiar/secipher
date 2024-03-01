@@ -12,5 +12,6 @@ export type createFileReturn = {
     name: string,
     suffix: string,
     password: string,
-    dir: fs.PathOrFileDescriptor
+    dir: fs.PathOrFileDescriptor,
+    obj: KeyFile
 }
