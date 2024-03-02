@@ -1,30 +1,45 @@
+import fs from 'fs'
 import { request, setData, getData } from './file.js'
-import { create } from "./create.js"
 import { KeyFile } from './types.js';
 import { createKey } from './createKey.js';
 import { encrypt, decrypt } from './encrypt.js';
 
-const a = "qwertyuiopasdfghjklzxcvbnm"
-let data: KeyFile = {}
+export default async function secipher({
+    location, name, suffix, password
+}: {
+    location: fs.PathOrFileDescriptor,
+    name?: string,
+    suffix?: string,
+    password?: string
+}) {
+    const resFile = await request(location, { name, suffix, password })
 
-for (const item of a) {
-    data[item] = createKey(1).str
+    const handleFile = () => {
+
+    }
+
+    const handleData = () => {
+        const codeData = (data: string, keysLength?: number, code?: "code1" | "code2") => {
+            const res = encrypt(data, keysLength, code)
+            let keys: string[] = []
+
+            if (keysLength) {
+                for (let index = 0; index < keysLength; index++) keys.push(res.output.slice(index * (res.output.length / keysLength), (res.output.length / keysLength) * (index + 1)))
+            } else keys = [res.output]
+
+            return { keys, codes: res.obj }
+        }
+
+        const encodeData = (keys: string[], codes: KeyFile) => {
+            return decrypt(keys.join(""), codes)
+        }
+    }
+
+    const handleUser = () => {
+
+    }
+
+    return { res: resFile, file: handleFile, data: handleData, user: handleUser }
 }
-
-await request("./", {})
-    .then(async (json) => {
-        console.log(json);
-
-        await setData("new", "oihdfg", data)
-            .then(() => console.log(true, 18))
-            .catch(() => console.log(false, 19))
-
-        await getData("oihdfg")
-            .then(res => console.log(res, 23))
-            .catch(() => console.log(false, 24))
-    })
-    .catch(err => console.log(err))
-
-
 
 console.log("end");

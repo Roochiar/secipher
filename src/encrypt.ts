@@ -25,8 +25,7 @@ const encrypt = (input: string, level: number = 1, type: "code1" | "code2" = "co
     }
 
     return { output, obj };
-};
-
+}
 
 const decrypt = (input: string, obj: KeyFile) => {
     let output = "";

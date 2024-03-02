@@ -16,7 +16,6 @@ let fakeFiles: createFileReturn[] = []
 const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }: { name?: string, suffix?: string, password?: string }) => {
     const prev = file
     try {
-
         if (name && suffix && password) {
             file = { ...file, name, suffix, password, dir: url }
             await read()
@@ -33,14 +32,13 @@ const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }:
     }
 }
 
-
 const setData = async (type: "new" | "edit", name: string, data: KeyFile) => {
     try {
         if (type === "new") {
             return await checkData(name)
                 .then(() => { throw new Error(`${name} it exists`) })
                 .catch(async () => {
-                    if (await newData(name, data)) return { status: true }
+                    if (await newData(name, data)) return { status: true, res: file.obj }
 
                     throw new Error("can not set new Data")
                 })
@@ -56,7 +54,7 @@ const setData = async (type: "new" | "edit", name: string, data: KeyFile) => {
                 .catch(() => new Error("can not edit Data"))
 
             if (await newData(name, editedData)) {
-                return { status: true }
+                return { status: true, res: file.obj }
             } else {
                 throw new Error("can not edit Data")
             }
@@ -82,7 +80,6 @@ const getData = async (name: string) => {
         return { status: false, res: err }
     }
 }
-
 
 const read = async () => {
     try {
@@ -123,7 +120,6 @@ const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { 
         return err;
     }
 }
-
 
 const remove = async (dir: fs.PathOrFileDescriptor, name: string, suffix: string) => {
     try {
