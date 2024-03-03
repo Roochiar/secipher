@@ -24,7 +24,7 @@ const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }:
         } else {
             file = { ...file, dir: url }
             const res = await create(url, undefined, { change: "create" })
-            await createFakeFiles(createFakeData({}), lengthFakeFiles, "create")
+            await createFakeFiles(createFakeData({}), lengthFakeFiles)
             return { status: true, res }
         }
     } catch (err) {
@@ -91,34 +91,33 @@ const read = async () => {
     }
 }
 
-const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake", change?: "create" | "edit" }) => {
-    let name, suffix, password;
-    if (options?.change === "edit") {
-        name = file.name;
-        suffix = file.suffix;
-        password = file.password;
-    } else {
-        name = createKey(1, "code2").str;
-        suffix = createKey(1, "code2").str;
-        password = createKey(1, "code2").str;
+const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake", change?: "create" | "edit", name?: string, suffix?: string, password?: string }) => {
+    let { name, suffix, password } = options?.change === "edit" ? {
+        name: options.name || file.name,
+        suffix: options.suffix || file.suffix,
+        password: options.password || file.password
+    } : {
+        name: options?.name || createKey(1, "code2").str,
+        suffix: options?.suffix || createKey(1, "code2").str,
+        password: options?.password || createKey(1, "code2").str
     }
 
     try {
-        const newData = data ? JSON.stringify(data) : (options?.change === "create" ? "{}" : "");
-        const dataEncrypted = encrypt(newData, 2, "code1");
-        await fs.promises.writeFile(`${dir + name}.${suffix}`, dataEncrypted.output);
+        const newData = data ? JSON.stringify(data) : (options?.change === "create" ? "{}" : "")
+        const dataEncrypted = encrypt(newData, 2, "code1")
+        await fs.promises.writeFile(`${dir + name}.${suffix}`, dataEncrypted.output)
 
         if (!options || !options.type || options.type === "basic") {
-            file = { name, suffix, password, dir, obj: dataEncrypted.obj };
-            return file;
+            file = { name, suffix, password, dir, obj: dataEncrypted.obj }
+            return file
         } else if (options.type === "fake") {
-            fakeFiles.push({ name, suffix, password, dir, obj: dataEncrypted.obj });
-            return { name, suffix, password, dir, obj: dataEncrypted.obj };
+            fakeFiles.push({ name, suffix, password, dir, obj: dataEncrypted.obj })
+            return { name, suffix, password, dir, obj: dataEncrypted.obj }
         } else {
-            return { name, suffix, password, dir };
+            return { name, suffix, password, dir }
         }
     } catch (err) {
-        return err;
+        return err
     }
 }
 
@@ -162,7 +161,7 @@ const checkData = async (name: string) => {
     }
 }
 
-const newData = async (name: string, value: KeyFile) => {
+const newData = async (name: string, value: KeyFile, lengthFakeFiles?: number) => {
     try {
         const data = await read()
             .then(res => {
@@ -173,6 +172,7 @@ const newData = async (name: string, value: KeyFile) => {
             .catch(() => { throw new Error("can not read data") })
 
         const res = await create(file.dir, data, { change: "edit" })
+        await createFakeFiles(createFakeData(data), lengthFakeFiles)
 
         if (res === file) return true
         else throw new Error("can not add new Data")
@@ -205,24 +205,30 @@ const createFakeData = (data: AllFile) => {
     return fakeData
 }
 
-const createFakeFiles = async (fakeData: AllFile, length?: number, type?: "create" | "edit") => {
+const createFakeFiles = async (fakeData: AllFile, length: number = Math.round(Math.random() * 8 + 8)) => {
     try {
-        for (let index = fakeFiles.length; index > (length || fakeFiles.length); index--) {
-            const fakeFile = fakeFiles[index - 1]
-            await remove(fakeFile.dir, fakeFile.name, fakeFile.suffix)
-            fakeFiles.pop()
+        const filesToRemove = fakeFiles.splice(length)
+        for (const fileToRemove of filesToRemove) {
+            await remove(fileToRemove.dir, fileToRemove.name, fileToRemove.suffix)
         }
 
-        for (let index = 0; index < (length || Math.round(Math.random() * 8 + 8)) - fakeFiles.length; index++) {
-            const fakeFileProps: createFileReturn = {
+        for (let index = 0; index < length; index++) {
+            const fakeFileProps: createFileReturn = fakeFiles[index] ? {
+                dir: file.dir,
+                name: fakeFiles[index].name,
+                suffix: fakeFiles[index].suffix,
+                password: fakeFiles[index].password,
+                obj: fakeFiles[index].obj
+            } : {
                 dir: file.dir,
                 name: createKey(1, "code2").str,
                 suffix: createKey(1, "code2").str,
                 password: createKey(1, "code2").str,
                 obj: {}
             }
-            await create(fakeFileProps.dir, fakeData, { type: "fake", change: type })
-            fakeFiles.push(fakeFileProps)
+
+            await create(fakeFileProps.dir, fakeData, { type: "fake", change: fakeFiles[index] ? "edit" : "create", ...fakeFileProps })
+            fakeFiles[index] = fakeFileProps
         }
 
         return true
