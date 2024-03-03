@@ -4,18 +4,15 @@ import { KeyFile } from './types.js';
 import { createKey } from './createKey.js';
 import { encrypt, decrypt } from './encrypt.js';
 
-export default async function secipher({
-    location, name, suffix, password
-}: {
-    location: fs.PathOrFileDescriptor,
-    name?: string,
-    suffix?: string,
-    password?: string
-}) {
-    const resFile = await request(location, { name, suffix, password })
+export default async function secipher() {
+    const handleKey = (keysLength?: number, level?: number, code?: "code1" | "code2") => {
+        let keys: string[] = []
 
-    const handleFile = () => {
+        if (keysLength) {
+            for (let index = 0; index < keysLength; index++) keys.push(createKey(level || 1, code).str)
+        } else keys = [createKey(level || 1, code).str]
 
+        return keys
     }
 
     const handleData = () => {
@@ -33,13 +30,11 @@ export default async function secipher({
         const encodeData = (keys: string[], codes: KeyFile) => {
             return decrypt(keys.join(""), codes)
         }
+
+        return { codeData, encodeData }
     }
 
-    const handleUser = () => {
-
-    }
-
-    return { res: resFile, file: handleFile, data: handleData, user: handleUser }
+    return { key: handleKey, data: handleData, file: { request, setData, getData } }
 }
 
 console.log("end");

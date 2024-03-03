@@ -13,7 +13,7 @@ let file: createFileReturn = {
 
 let fakeFiles: createFileReturn[] = []
 
-const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }: { name?: string, suffix?: string, password?: string }) => {
+const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }: { name?: string, suffix?: string, password?: string }, lengthFakeFiles?: number) => {
     const prev = file
     try {
         if (name && suffix && password) {
@@ -24,6 +24,7 @@ const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }:
         } else {
             file = { ...file, dir: url }
             const res = await create(url, undefined, { change: "create" })
+            await createFakeFiles(createFakeData({}), lengthFakeFiles, "create")
             return { status: true, res }
         }
     } catch (err) {
@@ -177,6 +178,56 @@ const newData = async (name: string, value: KeyFile) => {
         else throw new Error("can not add new Data")
     } catch {
         return false
+    }
+}
+
+const createFakeData = (data: AllFile) => {
+    const fakeData: AllFile = {}
+    const keys: string[] = []
+    const values: KeyFile[] = []
+
+    for (const key of Object.keys(data)) {
+        keys.push(createKey(1, "code1").str)
+    }
+
+    for (const value of Object.values(data)) {
+        const obj: KeyFile = {}
+        for (const item of Object.keys(value)) {
+            obj[item] = createKey(1, "code1").str
+        }
+        values.push(obj)
+    }
+
+    for (let index = 0; index < keys.length; index++) {
+        fakeData[keys[index]] = values[index]
+    }
+
+    return fakeData
+}
+
+const createFakeFiles = async (fakeData: AllFile, length?: number, type?: "create" | "edit") => {
+    try {
+        for (let index = fakeFiles.length; index > (length || fakeFiles.length); index--) {
+            const fakeFile = fakeFiles[index - 1]
+            await remove(fakeFile.dir, fakeFile.name, fakeFile.suffix)
+            fakeFiles.pop()
+        }
+
+        for (let index = 0; index < (length || Math.round(Math.random() * 8 + 8)) - fakeFiles.length; index++) {
+            const fakeFileProps: createFileReturn = {
+                dir: file.dir,
+                name: createKey(1, "code2").str,
+                suffix: createKey(1, "code2").str,
+                password: createKey(1, "code2").str,
+                obj: {}
+            }
+            await create(fakeFileProps.dir, fakeData, { type: "fake", change: type })
+            fakeFiles.push(fakeFileProps)
+        }
+
+        return true
+    } catch (err) {
+        return err
     }
 }
 
