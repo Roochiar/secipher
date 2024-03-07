@@ -1,6 +1,6 @@
 <h1 align=center>secipher</h1>
-<a href=https://github.com/Roochiar/secipher/blob/master/README.md#فارسی >فارسی</a>
-<a href=https://github.com/Roochiar/secipher/blob/master/README.md#English >English</a>
+<a href="#فارسی" >فارسی</a>
+<a href="#English" >English</a>
 
 ## English
 A library for encryption and creating multiple keys at the same time and storing sensitive data
