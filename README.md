@@ -1,6 +1,16 @@
-<h1 align=center>secipher</h1>
-<a href="#فارسی" >فارسی</a>
-<a href="#English" >English</a>
+<h1 style="text-align: center">secipher</h1>
+<a href="#فارسی" >
+    <span>فارسی</span>
+    <span>
+        <img src="./ir.png" alt="iran icon">
+    </span>
+</a>
+<a href="#English" >
+    <span>English</span>
+    <span>
+        <img src="./en.png" alt="iran icon">
+    </span>
+</a>
 
 ## English
 A library for encryption and creating multiple keys at the same time and storing sensitive data
