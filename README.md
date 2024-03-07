@@ -1,3 +1,4 @@
+<img src="./icon.svg" alt="secipher icon">
 <h1 align="center">secipher</h1>
 <a href="#فارسی" >
     <span>
