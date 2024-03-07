@@ -1,15 +1,15 @@
-<h1 style="text-align: center">secipher</h1>
+<h1 align="center">secipher</h1>
 <a href="#فارسی" >
-    <span>فارسی</span>
     <span>
-        <img src="./ir.png" alt="iran icon">
+        <img src="./ir.png" alt="iran icon" width="16" height="16">
     </span>
+    <span>فارسی</span>
 </a>
 <a href="#English" >
-    <span>English</span>
     <span>
-        <img src="./en.png" alt="iran icon">
+        <img src="./en.png" alt="iran icon" width="16" height="16">
     </span>
+    <span>English</span>
 </a>
 
 ## English
