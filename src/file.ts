@@ -6,18 +6,17 @@ import { encrypt, decrypt } from "./encrypt.js"
 let file: createFileReturn = {
     name: "",
     suffix: "",
-    password: "",
     dir: "",
     obj: {}
 }
 
 let fakeFiles: createFileReturn[] = []
 
-const request = async (url: fs.PathOrFileDescriptor, { name, suffix, password }: { name?: string, suffix?: string, password?: string }, lengthFakeFiles?: number) => {
+const request = async (url: fs.PathOrFileDescriptor, { name, suffix, obj }: { name?: string, suffix?: string, obj?: { [$key: string]: string } }, lengthFakeFiles?: number) => {
     const prev = file
     try {
-        if (name && suffix && password) {
-            file = { ...file, name, suffix, password, dir: url }
+        if (name && suffix && obj) {
+            file = { ...file, name, suffix, obj, dir: url }
             await read()
             const res = await rename(url, name, suffix)
             return { status: true, res }
@@ -91,15 +90,13 @@ const read = async () => {
     }
 }
 
-const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake", change?: "create" | "edit", name?: string, suffix?: string, password?: string }) => {
-    let { name, suffix, password } = options?.change === "edit" ? {
+const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { type?: "basic" | "copy" | "fake", change?: "create" | "edit", name?: string, suffix?: string }) => {
+    let { name, suffix } = options?.change === "edit" ? {
         name: options.name || file.name,
-        suffix: options.suffix || file.suffix,
-        password: options.password || file.password
+        suffix: options.suffix || file.suffix
     } : {
         name: options?.name || createKey(1, "code2").str,
-        suffix: options?.suffix || createKey(1, "code2").str,
-        password: options?.password || createKey(1, "code2").str
+        suffix: options?.suffix || createKey(1, "code2").str
     }
 
     try {
@@ -108,13 +105,13 @@ const create = async (dir: fs.PathOrFileDescriptor, data?: AllFile, options?: { 
         await fs.promises.writeFile(`${dir + name}.${suffix}`, dataEncrypted.output)
 
         if (!options || !options.type || options.type === "basic") {
-            file = { name, suffix, password, dir, obj: dataEncrypted.obj }
+            file = { name, suffix, dir, obj: dataEncrypted.obj }
             return file
         } else if (options.type === "fake") {
-            fakeFiles.push({ name, suffix, password, dir, obj: dataEncrypted.obj })
-            return { name, suffix, password, dir, obj: dataEncrypted.obj }
+            fakeFiles.push({ name, suffix, dir, obj: dataEncrypted.obj })
+            return { name, suffix, dir, obj: dataEncrypted.obj }
         } else {
-            return { name, suffix, password, dir }
+            return { name, suffix, dir }
         }
     } catch (err) {
         return err
@@ -133,11 +130,10 @@ const remove = async (dir: fs.PathOrFileDescriptor, name: string, suffix: string
 const rename = async (dir: fs.PathOrFileDescriptor, fileName: string, fileSuffix: string) => {
     const name = createKey(1, "code2").str
     const suffix = createKey(1, "code2").str
-    const password = createKey(1, "code2").str
 
     try {
         await fs.promises.rename(`${dir + fileName}.${fileSuffix}`, `${dir + name}.${suffix}`)
-        file = { ...file, name, suffix, password, dir }
+        file = { ...file, name, suffix, dir }
         return file
     } catch (err) {
         return err
@@ -217,13 +213,11 @@ const createFakeFiles = async (fakeData: AllFile, length: number = Math.round(Ma
                 dir: file.dir,
                 name: fakeFiles[index].name,
                 suffix: fakeFiles[index].suffix,
-                password: fakeFiles[index].password,
                 obj: fakeFiles[index].obj
             } : {
                 dir: file.dir,
                 name: createKey(1, "code2").str,
                 suffix: createKey(1, "code2").str,
-                password: createKey(1, "code2").str,
                 obj: {}
             }
 
