@@ -32,7 +32,7 @@ const request = async (url: fs.PathOrFileDescriptor, { name, suffix, obj }: { na
     }
 }
 
-const setData = async (type: "new" | "edit", name: string, data: KeyFile) => {
+const setData = async (type: "new" | "edit", name: string, data: KeyFile | string) => {
     try {
         if (type === "new") {
             return await checkData(name)
@@ -157,11 +157,11 @@ const checkData = async (name: string) => {
     }
 }
 
-const newData = async (name: string, value: KeyFile, lengthFakeFiles?: number) => {
+const newData = async (name: string, value: KeyFile | string, lengthFakeFiles?: number) => {
     try {
         const data = await read()
             .then(res => {
-                let json = JSON.parse(`${res}`)
+                let json = JSON.parse(res)
                 json[name] = value
                 return json
             })
