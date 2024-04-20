@@ -49,7 +49,7 @@ const setData = async (type: "new" | "edit", name: string, data: KeyFile | strin
             const editedData = await read()
                 .then(res => {
                     const json = JSON.parse(`${res}`)
-                    return { ...json[name], ...data }
+                    return { ...json[name], ...data || data }
                 })
                 .catch(() => new Error("can not edit Data"))
 
