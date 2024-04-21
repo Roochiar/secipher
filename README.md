@@ -13,7 +13,6 @@
     <span>English</span>
 </a>
 
-B.AI, [4/21/2024 8:30 PM]
 ## English
 A library for encryption, generating multiple keys simultaneously, and managing sensitive data.
 
@@ -158,9 +157,6 @@ Explanation of the setData method:
 
 Explanation of the getData function:
 - Its input is the name of the
-
-B.AI, [4/21/2024 8:31 PM]
-data you previously inserted.
 
 - The output is in the following format:
 `
