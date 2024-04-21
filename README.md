@@ -16,7 +16,7 @@
 ## English
 A library for encryption, generating multiple keys simultaneously, and managing sensitive data.
 
-Calling the library:
+Calling the library:</br>
 `
     import secipher from 'secipher';
     const { key, data, file } = secipher();
@@ -56,7 +56,7 @@ Explanation of the encodeData function:
 - The output is the decrypted data.
 
 ### Keys
-Creating keys in this library is very simple, and you can easily create multipart keys.
+Creating keys in this library is very simple, and you can easily create multipart keys.</br>
 `
     const keys = key(keysLength, level, code);
 `
@@ -81,7 +81,7 @@ This function creates an encrypted file along with dummy files at the specified 
 
 - The first input is the desired path of the encrypted file.
 
-- The output is an object in the following format:
+- The output is an object in the following format:</br>
 `
     {
         status: boolean,
@@ -97,7 +97,7 @@ This function creates an encrypted file along with dummy files at the specified 
 #### File Interaction
 `
     const request = await file.request(path, { name, suffix, obj });
-`
+`</br>
 By adding the second input, the function does not create a new file and searches for a file with the specified characteristics.
 
 Explanation of the second input of the function:
@@ -107,7 +107,7 @@ Explanation of the second input of the function:
 - suffix: The suffix of the encrypted file.
 - obj: The encryption principles of the file.
 
-- The output is an object in the following format:
+- The output is an object in the following format:</br>
 `
     {
         status: boolean,
@@ -123,13 +123,13 @@ Explanation of the second input of the function:
 #### Number of Dummy Files
 `
     const request = await file.request(path, undefined, lengthFakeFiles);
-`
+`</br>
 By adding the third input, you specify the number of dummy files, which must be an integer.
 
 #### Adding Data to a File
 `
     const res = await file.setData(type, name, data);
-`
+`</br>
 This method is used to add new data or modify old data.
 
 Explanation of the setData method:
@@ -137,7 +137,7 @@ Explanation of the setData method:
 - The second input is the name of the data.
 - The third input is the data itself.
 
-- The output is in the following format:
+- The output is in the following format:</br>
 `
     {
         status: boolean,
@@ -145,7 +145,7 @@ Explanation of the setData method:
             [$key]: string
         }
     }
-`
+`</br>
 - res: The new encryption principles of the file.
 
 - Note: After each modification, the file encryption changes and you must keep it safe!
@@ -158,13 +158,13 @@ Explanation of the setData method:
 Explanation of the getData function:
 - Its input is the name of the
 
-- The output is in the following format:
+- The output is in the following format:</br>
 `
     {
         status: boolean,
         res: data
     }
-`
+`</br>
 - res: The data you previously entered.
 
 Suggestions or criticisms via <a href="https://t.me/Roochiarfazli">Telegram</a>.
@@ -173,11 +173,10 @@ Made in Iran.
 ## فارسی
 یک کتابخانه برای رمزنگاری و ایجاد چندین کلید همزمان و نگهداری داده های حساس
 
-صدا زدن کتابخانه:
+صدا زدن کتابخانه:</br>
 `
     import secipher from 'secipher';
     const { key, data, file } = secipher()
-
     // بقیه کدها
 `
 
@@ -188,9 +187,7 @@ Made in Iran.
 #### رمزنگاری
 `
     const { codeData } = data()
-
     const { keys, codes } = codeData(data, keysLength, code)
-
     console.log(keys, codes)
 `
 
@@ -205,9 +202,7 @@ Made in Iran.
 #### رمزگشایی
 `
     const { encodeData } = data()
-
     const res = encodeData(keys, codes)
-
     console.log(res)
 `
 
@@ -246,7 +241,7 @@ Made in Iran.
 
 - اولین ورودی مسیر دلخواه فایل رمزنگاری شده است
 
-- خروجی یک شی به صورت زیر است
+- خروجی یک شی به صورت زیر است</br>
     `
         {
             status: boolean,
@@ -262,7 +257,7 @@ Made in Iran.
 #### ارتباط با فایل
 `
     const request = await file.request(path, { name, suffix, obj })
-`
+`</br>
 با اضافه کردن ورودی دوم، تابع دیگر فایل جدیدی نمی سازد و دنبال فایلی با مشخصات داده شده می گردد
 
 توضیحات ورودی دوم تابع:
@@ -272,7 +267,7 @@ Made in Iran.
 - suffix: پسوند فایل رمزنگاری شده است
 - obj: اصول فایل رمزنگاری شده است 
 
-- خروجی یک شی به صورت زیر است
+- خروجی یک شی به صورت زیر است</br>
     `
         {
             status: boolean,
@@ -288,13 +283,13 @@ Made in Iran.
 #### تعداد دلخواه فایل های جعلی
 `
     const request = await file.request(path, undefined, lengthFakeFiles)
-`
+`</br>
 با اضافه کردن ورودی سوم تعداد فایل های جعلی را مشخص می کنیم که حتما باید عددی صحیح باشد
 
 #### اضافه کردن داده ها به فایل
 `
     const res = await file.setData(type, name, data)
-`
+`</br>
 این متد برای داده جدید یا تغییر داده قدیمی استفاده می شود
 
 توضیحات متد setData:
@@ -302,7 +297,7 @@ Made in Iran.
 - دومین ورودی نام داده می باشد
 - سومین ورودی خود داده می باشد
 
-- خروجی به صورت زیر است
+- خروجی به صورت زیر است</br>
     `
         {
             status: boolean,
@@ -323,13 +318,13 @@ Made in Iran.
 توضیحات تابع getData:
 - ورودی آن نام داده ای است که قبلا گذاشته اید
 
-- خروجی به صورت زیر است
+- خروجی به صورت زیر است</br>
     `
         {
             status: boolean,
             res: data
         }
-    `
+    `</br>
     res: داده ای که قبلا آن را وارد کرده اید
 
 
