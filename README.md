@@ -168,6 +168,7 @@ Explanation of the getData function:
 - res: The data you previously entered.
 
 Suggestions or criticisms via <a href="https://t.me/Roochiarfazli">Telegram</a>.
+<br/>
 Made in Iran.
 
 ## فارسی
@@ -327,4 +328,5 @@ Made in Iran.
     ```
 
 انتقادات و پیشنهاد ها از طریق <a href="https://t.me/Roochiarfazli">تلگرام</a>
+<br/>
 ساخت ایران
