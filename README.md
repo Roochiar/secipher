@@ -169,6 +169,10 @@ Explanation of the getData function:
 
 Suggestions or criticisms via <a href="https://t.me/Roochiarfazli">Telegram</a>.
 <br/>
+<br/>
+<a href="./LICENSE">LICENSE</a>
+<br/>
+<br/>
 Made in Iran.
 
 ## فارسی
@@ -328,5 +332,9 @@ Made in Iran.
     ```
 
 انتقادات و پیشنهاد ها از طریق <a href="https://t.me/Roochiarfazli">تلگرام</a>
+<br/>
+<br/>
+<a href="./LICENSE">LICENSE</a>
+<br/>
 <br/>
 ساخت ایران
