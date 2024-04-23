@@ -177,7 +177,6 @@ Made in Iran.
 ```ts
     import secipher from 'secipher';
     const { key, data, file } = secipher()
-
     // بقیه کدها
 ```
 
@@ -188,9 +187,7 @@ Made in Iran.
 #### رمزنگاری
 ```ts
     const { codeData } = data()
-
     const { keys, codes } = codeData(data, keysLength, code)
-
     console.log(keys, codes)
 ```
 
@@ -205,9 +202,7 @@ Made in Iran.
 #### رمزگشایی
 ```ts
     const { encodeData } = data()
-
     const res = encodeData(keys, codes)
-
     console.log(res)
 ```
 
@@ -330,8 +325,3 @@ Made in Iran.
             res: data
         }
     ```
-    res: داده ای که قبلا آن را وارد کرده اید
-
-
-پیشنهاد یا انتقاد از طریق <a href="https://t.me/Roochiarfazli">تلگرام</a>
-ساخت ایران
